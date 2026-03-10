@@ -269,9 +269,9 @@ int main() {
 		module.train(1000, true);
 
 		// Checking the results out
-		std::cout << "\nResults after learning:\n";
+		cout << "\nResults after learning:\n";
 
-		std::vector<std::vector<float>> test_inputs = {
+		vector<vector<float>> test_inputs = {
 			{0.0f, 0.0f},
 			{0.0f, 1.0f},
 			{1.0f, 0.0f},
@@ -289,9 +289,7 @@ int main() {
 		}
 
 	}
-	catch (const std::exception& e) {
-		std::cout << "Error: " << e.what() << "\n";
+	catch (const exception& e) {
+		cout << "Error: " << e.what() << "\n";
 	}
-
-	return 0;
 }
