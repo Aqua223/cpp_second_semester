@@ -66,7 +66,7 @@ public:
 
 		initialize_weights();
 
-		cout << "Module created\n";
+		cout << "Module created!\n";
 		cout << "Architecture: " << input_size << ' ' << hidden_size << ' ' << output_size << '\n';
 	}
 

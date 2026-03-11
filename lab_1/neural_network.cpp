@@ -1,17 +1,15 @@
 #include "learning_module.h"
 
+// Перемешивание датасета
 void shuffle_dataset(vector<vector<float>>& features, vector<vector<float>>& targets) {
-    // Создаем вектор индексов
     vector<int> indices(features.size());
     for (int i = 0; i < features.size(); i++) {
         indices[i] = i;
     }
 
-    // Перемешиваем индексы
     unsigned seed = chrono::system_clock::now().time_since_epoch().count();
     shuffle(indices.begin(), indices.end(), default_random_engine(seed));
 
-    // Создаем перемешанные векторы
     vector<vector<float>> shuffled_features;
     vector<vector<float>> shuffled_targets;
 
@@ -20,18 +18,17 @@ void shuffle_dataset(vector<vector<float>>& features, vector<vector<float>>& tar
         shuffled_targets.push_back(targets[idx]);
     }
 
-    // Заменяем исходные векторы
     features = move(shuffled_features);
     targets = move(shuffled_targets);
 }
 
+// загрузка файла (здесь конкретная реализация под датасет)
 pair<vector<vector<float>>, vector<vector<float>>> read_file(const string& filename) {
     vector<vector<float>> features;
     vector<vector<float>> targets;
 
     ifstream file(filename);
 
-    // ВАЖНО: проверяем открытие файла
     if (!file.is_open()) {
         throw runtime_error("Cannot open file: " + filename);
     }
@@ -42,20 +39,19 @@ pair<vector<vector<float>>, vector<vector<float>>> read_file(const string& filen
     while (getline(file, line)) {
         line_num++;
 
-        // Пропускаем пустые строки
+        // Пропуск пустых строк
         if (line.empty()) continue;
 
         stringstream ss(line);
         string cell;
 
-        // Читаем 4 признака
         vector<float> features_row;
         for (int i = 0; i < 4; i++) {
             if (!getline(ss, cell, ',')) {
                 throw runtime_error("Error reading feature at line " + to_string(line_num));
             }
 
-            // Удаляем пробелы
+            // Удаление пробелов
             cell.erase(0, cell.find_first_not_of(" \t"));
             cell.erase(cell.find_last_not_of(" \t") + 1);
 
@@ -68,19 +64,17 @@ pair<vector<vector<float>>, vector<vector<float>>> read_file(const string& filen
         }
         features.push_back(features_row);
 
-        // ВАЖНО: читаем класс с разделителем!
         if (!getline(ss, cell, ',')) {
             throw runtime_error("Missing class at line " + to_string(line_num));
         }
 
-        // Очищаем от кавычек, пробелов и спецсимволов
+        // Чистка от кавычек, пробелов и спецсимволов
         cell.erase(remove(cell.begin(), cell.end(), '\"'), cell.end());
         cell.erase(remove(cell.begin(), cell.end(), '\''), cell.end());
         cell.erase(remove(cell.begin(), cell.end(), ' '), cell.end());
         cell.erase(remove(cell.begin(), cell.end(), '\r'), cell.end());
         cell.erase(remove(cell.begin(), cell.end(), '\n'), cell.end());
 
-        // Создаем one-hot вектор для 3 классов
         vector<float> target_row(3, 0.0f);
 
         if (cell == "Iris-setosa" || cell == "setosa") {
@@ -94,7 +88,6 @@ pair<vector<vector<float>>, vector<vector<float>>> read_file(const string& filen
         }
         else {
             cout << "Warning: Unknown class '" << cell << "' at line " << line_num << endl;
-            // Удаляем features этой строки
             features.pop_back();
             continue;
         }
@@ -124,7 +117,7 @@ public:
 		: module(input_size, hidden_size, output_size) {
 
 		cout << "Network created!\n";
-		cout << "Architecture: " << input_size << "-" << hidden_size << "-" << output_size << "\n";
+		cout << "Architecture: " << input_size << " " << hidden_size << " " << output_size << "\n";
 	}
 
     void load_data(const string& filename, float train_ratio = 0.8f) {
@@ -161,10 +154,10 @@ public:
         cout << "\n-START TRAINING-\n";
 
         for (int epoch = 0; epoch < epochs; epoch++) {
-            // Обучаем одну эпоху
+            // Обучение на одной эпохе
             float train_loss = module.train_epoch();
 
-            // Считаем ошибку на валидации
+            // Ошибка на валидации
             float val_loss = 0;
             for (const auto& sample : validation_data) {
                 auto features = sample->getFeatures();
@@ -174,12 +167,12 @@ public:
             }
             val_loss /= validation_data.size();
 
-            // Выводим прогресс
+            // Прогресс
             cout << "Epoch " << setw(3) << epoch + 1 << "/" << epochs
                 << " | train loss: " << fixed << setprecision(4) << train_loss
                 << " | val loss: " << val_loss;
 
-            // Проверяем улучшение
+            // Проверка улучшения
             if (val_loss < best_loss) {
                 best_loss = val_loss;
                 epochs_without_improvement = 0;
@@ -227,10 +220,10 @@ public:
 
         for (const auto& sample : validation_data) {
             auto features = sample->getFeatures();
-            auto target = sample->getTarget();  // это вектор [1,0,0] или [0,1,0] или [0,0,1]
+            auto target = sample->getTarget();  // это вектор [1, 0, 0] или [0, 1, 0] или [0, 0, 1]
             auto output = module.predict(features);
 
-            // Находим предсказанный класс (индекс с макс значением)
+            // Предсказанный класс
             int predicted_class = 0;
             float max_val = output[0];
             for (int i = 1; i < output.size(); i++) {
@@ -240,10 +233,10 @@ public:
                 }
             }
 
-            // Находим реальный класс из one-hot вектора
+            // Фактический класс
             int actual_class = 0;
             for (int i = 0; i < target.size(); i++) {
-                if (target[i] > 0.5f) {  // так как это 1.0 в one-hot
+                if (target[i]) { 
                     actual_class = i + 1;
                     break;
                 }
@@ -267,6 +260,7 @@ public:
     }
 
 private:
+    // Среднеквадратичная ошибка
     float mse_loss(const vector<float>& predicted, const vector<float>& target) {
         float sum = 0;
         for (size_t i = 0; i < predicted.size(); i++) {
@@ -280,14 +274,12 @@ private:
 // Пример использования
 int main() {
     try {
-        // Сначала проверим текущую директорию
         cout << "Current directory contents:\n";
 
         string filename = "iris.txt";
 
         cout << "\nTrying to read " << filename << "...\n\n";
 
-        // Просто читаем и выводим первые несколько строк
         auto [features, targets] = read_file(filename);
 
         cout << "\nFirst 5 samples:\n";
@@ -303,7 +295,7 @@ int main() {
             cout << '\n';
         }
 
-        // Создаем и обучаем сеть
+        // Создание и обучение сети
         cout << "\nCreating neural network...\n";
         NeuralNetwork network(4, 5, 3);
 
@@ -312,7 +304,7 @@ int main() {
         network.evaluate();
 
         auto predictions = network.predict_batch(features);
-        float total_loss = 0.0f;
+        int correct = 0;
         int step = 1; 
 
         cout << "\n-ANOTHER TESTING-\n";
@@ -331,10 +323,9 @@ int main() {
                 }
             }
 
-            // Находим реальный класс из one-hot вектора
-            int actual_class = 0;
+            int actual_class = 1;
             for (int j = 0; j < targets[i].size(); j++) {
-                if (targets[i][j]) {  // так как это 1.0 в one-hot
+                if (targets[i][j]) {
                     actual_class = j + 1;
                     break;
                 }
@@ -343,10 +334,12 @@ int main() {
             cout << "| Predicted: " << predicted_class << ". Actual: " << actual_class << ' ';
             if (predicted_class == actual_class) {
                 cout << "| Correct!";
+                correct += 1;
             }
 
             cout << '\n';
         }
+        cout << "\nAccuracy: " << setprecision(2) << 1.0f * correct / predictions.size() * 100 << "%\n";
     }
     catch (const exception& e) {
         cerr << "Error: " << e.what() << endl;
