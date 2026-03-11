@@ -1,7 +1,14 @@
+#pragma once
+
 #include <iostream>
 #include <vector>
+#include <fstream>
+#include <sstream>
+#include <string>
+#include <iomanip>
 #include <random>
-#include <cmath>
+#include <chrono>
+#include <algorithm>
 
 using namespace std;
 
@@ -42,10 +49,14 @@ private:
 	vector<unique_ptr<IDataSample>> dataset;
 
 public:
+	int get_input_size() const { return input_size; }
+	int get_hidden_size() const { return hidden_size; }
+	int get_output_size() const { return output_size; }
+
 	LearningModule(int input_size, int hidden_size, int output_size)
 		: input_size(input_size),
-		  hidden_size(hidden_size),
-		  output_size(output_size) {
+		hidden_size(hidden_size),
+		output_size(output_size) {
 
 		W1.resize(hidden_size, vector<float>(input_size));
 		W2.resize(output_size, vector<float>(hidden_size));
@@ -71,7 +82,7 @@ public:
 		dataset.push_back(move(sample));
 	}
 
-	void forward(const vector<float>& input, 
+	void forward(const vector<float>& input,
 		vector<float>& hidden,
 		vector<float>& output) {
 
@@ -80,11 +91,11 @@ public:
 		}
 
 		for (int i = 0; i < hidden_size; i++) {
-			float sum = b1[i]; 
+			float sum = b1[i];
 			for (int j = 0; j < input_size; j++) {
 				sum += W1[i][j] * input[j];
 			}
-			hidden[i] = sigmoid(sum); 
+			hidden[i] = sigmoid(sum);
 		}
 
 		for (int i = 0; i < output_size; i++) {
@@ -103,7 +114,7 @@ public:
 
 		std::vector<float> grad_output(output_size);
 		for (int i = 0; i < output_size; i++) {
-	
+
 			float diff = output[i] - target[i];
 			grad_output[i] = 2 * diff * output[i] * (1 - output[i]);
 		}
@@ -134,6 +145,10 @@ public:
 		}
 	}
 
+	void set_learning_rate(float lr) {
+		learning_rate = lr;
+	}
+
 	float train_step(const vector<float>& input,
 		const vector<float>& target) {
 
@@ -142,15 +157,11 @@ public:
 
 		forward(input, hidden, output);
 
-		float loss = mseLoss(output, target);
+		float loss = mse_loss(output, target);
 
 		backward(input, target, hidden, output);
 
 		return loss;
-	}
-
-	void set_learning_rate(float lr) {
-		learning_rate = lr;
 	}
 
 	float train_epoch() {
@@ -169,7 +180,7 @@ public:
 
 	void train(int epochs, bool verbose = true) {
 		if (dataset.empty()) {
-			cout << "No data for learning!\n";
+			cout << "No data for training!\n";
 			return;
 		}
 
@@ -177,10 +188,28 @@ public:
 			float avgLoss = train_epoch();
 
 			if (verbose) {
-				cout << "Epoch " << epoch + 1 << "/" << epochs
-					<< ", mean loss: " << avgLoss << "\n";
+				cout << "Epoch " << epoch + 1 << '/' << epochs
+					<< ", mean loss: " << avgLoss << '\n';
 			}
 		}
+	}
+
+	vector<float> predict(const vector<float>& input) {
+		vector<float> hidden(hidden_size);
+		vector<float> output(output_size);
+		forward(input, hidden, output);
+		return output;
+	}
+
+	float evaluate(const vector<unique_ptr<IDataSample>>& test_data) {
+		float total_loss = 0;
+		for (const auto& sample : test_data) {
+			auto features = sample->getFeatures();
+			auto target = sample->getTarget();
+			auto output = predict(features);
+			total_loss += mse_loss(output, target);
+		}
+		return total_loss / test_data.size();
 	}
 
 private:
@@ -193,7 +222,7 @@ private:
 			for (int j = 0; j < input_size; j++) {
 				W1[i][j] = dist(gen);
 			}
-			b1[i] = 0.0f; 
+			b1[i] = 0.0f;
 		}
 
 		for (int i = 0; i < output_size; i++) {
@@ -215,7 +244,7 @@ private:
 
 	float learning_rate = 0.1f;
 
-	float mseLoss(const vector<float>& predicted,
+	float mse_loss(const vector<float>& predicted,
 		const vector<float>& target) {
 		float sum = 0.0f;
 		for (size_t i = 0; i < predicted.size(); i++) {
@@ -225,71 +254,3 @@ private:
 		return sum / predicted.size();
 	}
 };
-
-int main() {
-	try {
-		// Module creating: 2 inputs -> 4 hiddens -> 1 output (binary classification)
-		LearningModule module(2, 4, 1);
-		module.set_learning_rate(0.1f);
-
-		// Adding data for XOR 
-		// XOR: (0,0) -> 0, (0,1) -> 1, (1,0) -> 1, (1,1) -> 0
-
-		// Example 1: (0,0) -> 0
-		auto sample1 = make_unique<NumericDataSample>(
-			vector<float>{0.0f, 0.0f},
-			vector<float>{0.0f}
-		);
-		module.add_data_sample(move(sample1));
-
-		// Example 2: (0,1) -> 1
-		auto sample2 = std::make_unique<NumericDataSample>(
-			vector<float>{0.0f, 1.0f},
-			vector<float>{1.0f}
-		);
-		module.add_data_sample(move(sample2));
-
-		// Example 3: (1,0) -> 1
-		auto sample3 = make_unique<NumericDataSample>(
-			vector<float>{1.0f, 0.0f},
-			vector<float>{1.0f}
-		);
-		module.add_data_sample(move(sample3));
-
-		// Example 4: (1,1) -> 0
-		auto sample4 = make_unique<NumericDataSample>(
-			vector<float>{1.0f, 1.0f},
-		    vector<float>{0.0f}
-		);
-		module.add_data_sample(move(sample4));
-
-		cout << "Starting XOR fucntion learning...\n";
-
-		// Teaching 1000 epoches
-		module.train(1000, true);
-
-		// Checking the results out
-		cout << "\nResults after learning:\n";
-
-		vector<vector<float>> test_inputs = {
-			{0.0f, 0.0f},
-			{0.0f, 1.0f},
-			{1.0f, 0.0f},
-			{1.0f, 1.0f}
-		};
-
-		for (const auto& input : test_inputs) {
-			auto hidden = vector<float>(4);
-			auto output = vector<float>(1);
-
-			module.forward(input, hidden, output);
-			cout << input[0] << " XOR " << input[1]
-				<< " = " << output[0]
-				<< " (rounded: " << (output[0] > 0.5f ? 1 : 0) << ")\n";
-		}
-
-	}
-	catch (const exception& e) {
-		cout << "Error: " << e.what() << "\n";
-	}
-}

@@ -3,5 +3,10 @@
     <Platform Name="x64" />
     <Platform Name="x86" />
   </Configurations>
-  <Project Path="lab_1/lab_1.vcxproj" />
+  <Folder Name="/Solution Items/">
+    <File Path="../../../Downloads/iris/iris.data" />
+    <File Path="../../../Downloads/iris/iris.names" />
+    <File Path="../../../Downloads/iris/iris.txt" />
+  </Folder>
+  <Project Path="lab_1/lab_1.vcxproj" Id="eeafdc2b-2212-456a-ac48-787c03e22c3e" />
 </Solution>
