@@ -127,7 +127,6 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="learning_module.cpp" />
     <ClCompile Include="neural_network.cpp" />
   </ItemGroup>
   <ItemGroup>
