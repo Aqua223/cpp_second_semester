@@ -7,7 +7,6 @@ using namespace std;
 class NeuralNetwork {
 private:
     LearningModule module;
-    vector<unique_ptr<IDataSample>> training_data;
     vector<unique_ptr<IDataSample>> validation_data;
 
     float mse_loss(const vector<float>& predicted, const vector<float>& target);
@@ -16,9 +15,13 @@ public:
     NeuralNetwork(int input_size, int hidden_size, int output_size);
 
     void load_data(const string& filename, float train_ratio = 0.8f);
+
     void train_with_validation(int epochs, float learning_rate = 0.1f, int patience = 10);
+
     vector<float> predict(const vector<float>& input);
+
     vector<vector<float>> predict_batch(const vector<vector<float>>& inputs);
+
     void evaluate();
 };
 
@@ -304,7 +307,6 @@ pair<vector<vector<float>>, vector<vector<float>>> read_file(const string& filen
             if (!getline(ss, cell, ',')) {
                 throw runtime_error("Error reading feature at line " + to_string(line_num));
             }
-
             // для очистки признаков от лишних пробелов и табуляции по краям
             cell = clean_digit(cell);
 
@@ -320,7 +322,6 @@ pair<vector<vector<float>>, vector<vector<float>>> read_file(const string& filen
         if (!getline(ss, cell, ',')) {
             throw runtime_error("Missing class at line " + to_string(line_num));
         }
-
         // Обработка названия класса цветка (лишние кавычки, пробелы и т.д.)
         cell = clean_string(cell);
 
