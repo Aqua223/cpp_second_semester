@@ -50,7 +50,7 @@ size_t NumericDataSample::getTargetSize() const {
     return target.size();
 }
 
-// Реализация LearningModule (ПЕРЕРАБОТАНО ДЛЯ BCE)
+// Реализация LearningModule
 
 LearningModule::LearningModule(int input_size, int hidden_size, int output_size)
     : input_size(input_size),
@@ -243,7 +243,7 @@ float LearningModule::evaluate(const vector<unique_ptr<IDataSample>>& test_data)
         auto features = sample->getFeatures();
         auto target = sample->getTarget();
         auto output = predict(features);
-        total_loss += bce_loss(output, target);  // Используем BCE для оценки
+        total_loss += bce_loss(output, target); 
     }
     return total_loss / test_data.size();
 }
@@ -623,9 +623,4 @@ int main() {
     catch (const exception& e) {
         cerr << "Error: " << e.what() << endl;
     }
-
-    cout << "\nPress Enter to exit...";
-    cin.ignore();
-    cin.get();
-    return 0;
 }
