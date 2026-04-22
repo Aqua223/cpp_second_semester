@@ -98,7 +98,6 @@ float LearningModule::sigmoid_derivative(float x) {
     return s * (1 - s);
 }
 
-// НОВАЯ ФУНКЦИЯ: BCE Loss вместо MSE
 float LearningModule::bce_loss(const vector<float>& predicted, const vector<float>& target) {
     float eps = 1e-7f;
     float loss = 0.0f;
