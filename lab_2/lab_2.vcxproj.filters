@@ -15,12 +15,18 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="neural_network.cpp">
+    <ClCompile Include="run.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="learning_module.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="neural_network.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="data_samples.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
